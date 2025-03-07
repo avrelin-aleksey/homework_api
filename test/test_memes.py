@@ -187,9 +187,10 @@ class TestDeleteMemes:
         memes_endpoint.delete_memes(create_memes_for_test, token)
         with allure.step("Удаление мема статус код = 200"):
             memes_endpoint.check_status_code(200)
-        with allure.step("Проверка успешного удаления статус код = 404"):
+        with allure.step("Проверка что удаленный мем недоступен = 404"):
             memes_endpoint.get_memes_by_id(create_memes_for_test, token)
             memes_endpoint.check_status_code(404)
+            assert "404 Not Found" in memes_endpoint.response.text
 
 
     @allure.story("Удаление несуществующего мема")
