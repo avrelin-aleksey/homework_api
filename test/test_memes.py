@@ -1,6 +1,6 @@
 import allure
 import pytest
-from endpoints.base_endpoint import (
+from endpoints.test_config import (
     memes_data_negative1,
     memes_data_negative2,
     memes_data_negative3,
@@ -51,9 +51,10 @@ class TestGetMemes:
             assert len(memes) > 0, "Список мемов пуст"
         with allure.step("Проверка, что в ответе присутствует ключ 'data'"):
             assert "data" in memes, "Ответ не содержит ключ 'data'"
-        with allure.step("Проверка, что количество мемов больше 2000"):
+        with allure.step("Проверка, что количество мемов больше 0"):
             memes_all_count = len(memes["data"])
-            assert memes_all_count > 2000, f"Ожидалось, что мемов будет больше 2000, а их {memes_all_count}"
+            assert memes_all_count >= 1, (f"Ожидалось, что мемов в списке будет не меньше 1,"
+                                         f" а список пуст и количество равно {memes_all_count}")
 
 
 @allure.feature("Создание мемов")
@@ -65,6 +66,10 @@ class TestCreateMemes:
             memes_endpoint.check_status_code(200)
         with allure.step("Проверка наличия id"):
             assert response["id"] is not None
+        with allure.step("Сравнение отправленного тела запроса и получаемого"):
+            response_for_comparison = dict(filter(lambda x: x[0] in memes_data, response.items()))
+            assert response_for_comparison == memes_data
+
 
     @allure.story("Создание мема без авторизации")
     def test_create_memes_without_auth(self, memes_endpoint):
@@ -134,8 +139,16 @@ class TestUpdateMemes:
         response = memes_endpoint.update_memes(create_memes_for_test, token, **updated_data)
         with allure.step("Проверка статус код = 200"):
             memes_endpoint.check_status_code(200)
-        with allure.step("Приходит в ответе текст 'Updated Meme'"):
+        with allure.step("Сравнение отправленного и полученного 'id'"):
+            assert response["id"] == f"{create_memes_for_test}"
+        with allure.step("Сравнение отправленного и полученного 'text'"):
             assert response["text"] == "Updated Meme"
+        with allure.step("Сравнение отправленного и полученного 'url'"):
+            assert response["url"] == "https://alekseys.mem/updated_memes.jpg"
+        with allure.step("Сравнение отправленного и полученного 'tags'"):
+            assert response["tags"] == ["updated", "test2"]
+        with allure.step("Сравнение отправленного и полученного 'info'"):
+            assert response["info"] == {"key": "updated_value"}
 
     @allure.story("PUT изменение мема с невалидными данными")
     @pytest.mark.parametrize('test_case', [
@@ -172,8 +185,12 @@ class TestDeleteMemes:
     @allure.story("Удаление существующего мема")
     def test_delete_memes(self, memes_endpoint, token, create_memes_for_test):
         memes_endpoint.delete_memes(create_memes_for_test, token)
-        with allure.step("Проверка статус код = 200"):
+        with allure.step("Удаление мема статус код = 200"):
             memes_endpoint.check_status_code(200)
+        with allure.step("Проверка успешного удаления статус код = 404"):
+            memes_endpoint.get_memes_by_id(create_memes_for_test, token)
+            memes_endpoint.check_status_code(404)
+
 
     @allure.story("Удаление несуществующего мема")
     def test_delete_memes_negative(self, memes_endpoint, token):

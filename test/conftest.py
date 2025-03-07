@@ -2,7 +2,7 @@ import pytest
 
 from endpoints.memes import Memes
 from endpoints.base_endpoint import Authorization
-from endpoints.base_endpoint import memes_data
+from endpoints.test_config import memes_data
 from endpoints.base_endpoint import USER_NAME
 
 
