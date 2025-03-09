@@ -40,7 +40,6 @@ class TestGetMemes:
         with allure.step("Приходит в ответе текст '401 Unauthorized'"):
             assert "401 Unauthorized" in memes_endpoint.response.text
 
-    import allure
 
     @allure.story("Получение всех мемов c авторизацией по токену")
     def test_get_memes_all(self, memes_endpoint, token):
